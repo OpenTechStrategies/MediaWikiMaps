@@ -138,7 +138,6 @@
 				}
 			});
 			simpleMap.fitBounds(bounds);
-			mapTable.style.display = "none";
 		})
 	})
 })()

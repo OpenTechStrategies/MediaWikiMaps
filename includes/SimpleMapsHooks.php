@@ -19,4 +19,9 @@ class SimpleMapsHooks {
 
 		return true;
 	}
+
+	public static function onOutputPageBeforeHTML( OutputPage $out, &$text ) {
+		global $wgSimpleMapsRenderingClass;
+		$out->addInlineStyle('table.'.$wgSimpleMapsRenderingClass.' { display: none; }');
+	}
 }
