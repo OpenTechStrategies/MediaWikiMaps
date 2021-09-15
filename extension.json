@@ -1,0 +1,54 @@
+{
+  "name": "SimpleMaps",
+  "version": "0.0.1",
+  "author": [
+    "Open Tech Strategies"
+  ],
+  "url": "https://github.com/OpenTechStrategies/SimpleMaps",
+  "descriptionmsg": "coll-desc",
+  "license-name": "AGPL-3.0-only",
+  "type": "media",
+  "requires": {
+    "MediaWiki": ">= 1.33.0"
+  },
+  "callback": "SimpleMapsHooks::registerExtension",
+  "MessagesDirs": {
+    "SimpleMaps": [
+      "i18n"
+    ]
+  },
+  "AutoloadClasses": {
+    "SimpleMapsHooks": "includes/SimpleMapsHooks.php"
+  },
+  "AutoloadNamespaces": {
+    "MediaWiki\\Extensions\\SimpleMaps\\": "includes/"
+  },
+  "ResourceModules": {
+    "ext.leaflet": {
+      "scripts": "resources/ext.leaflet/leaflet.js",
+      "styles": "resources/ext.leaflet/leaflet.css"
+    },
+    "ext.simplemaps": {
+      "scripts": "resources/ext.simplemaps/simplemaps.js",
+      "styles": "resources/ext.simplemaps/simplemaps.css",
+      "dependencies": [
+        "ext.leaflet"
+      ]
+    }
+  },
+  "ResourceFileModulePaths": {
+    "localBasePath": "",
+    "remoteExtPath": "SimpleMaps"
+  },
+  "Hooks": {
+    "BeforePageDisplay": "SimpleMapsHooks::onBeforePageDisplay",
+    "ResourceLoaderGetConfigVars": "SimpleMapsHooks::onResourceLoaderGetConfigVars"
+  },
+  "config": {
+    "SimpleMapsRenderingClass": {
+      "description": "The WikiTable class which will trigger SimpleMaps.",
+      "value": "simpleMap"
+    }
+  },
+  "manifest_version": 2
+}
