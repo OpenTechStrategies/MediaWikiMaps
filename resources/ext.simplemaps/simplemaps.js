@@ -104,6 +104,18 @@
 		return document.querySelectorAll("table.simpleMap");
 	}
 
+	function getLatLngsFromMarkers(markers) {
+		let latLngs = markers.map(function (marker) {
+			if(!isNaN(marker.lat) && !isNaN(marker.lng)) {
+				return [marker.lat, marker.lng];
+			};
+			return null;
+		}).filter(function (latLng) {
+			return latLng !== null;
+		});
+		return latLngs;
+	}
+
 	runAfterLoaded(function () {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -115,6 +127,8 @@
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var markers = getMarkersFromMapTable(mapTable);
+			var latLngs = getLatLngsFromMarkers(markers);
+			var bounds = new L.LatLngBounds(latLngs);
 			markers.forEach(function(marker) {
 				if(!isNaN(marker.lat) && !isNaN(marker.lng)) {
 					var leafletMarker = L.marker([marker.lat, marker.lng]).addTo(simpleMap);
@@ -123,8 +137,7 @@
 					}
 				}
 			});
-
-			simpleMap.setView([0, 0], 2);
+			simpleMap.fitBounds(bounds);
 			mapTable.style.display = "none";
 		})
 	})
