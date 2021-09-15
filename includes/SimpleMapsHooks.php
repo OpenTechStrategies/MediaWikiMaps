@@ -11,7 +11,7 @@ class SimpleMapsHooks {
 	}
 
 	public static function onResourceLoaderGetConfigVars( array &$vars, string $skin, Config $config ) {
-		// Define variables that we want accessable in JavaScript using the technique decribed in
+		// Define variables that we want accessible in JavaScript using the technique described in
 		// https://www.mediawiki.org/wiki/Manual:Hooks/ResourceLoaderGetConfigVars
 		$vars['wgSimpleMaps'] = [
 			'renderingClass' => $config->get('SimpleMapsRenderingClass'),
