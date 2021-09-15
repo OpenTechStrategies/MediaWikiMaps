@@ -42,7 +42,8 @@
   },
   "Hooks": {
     "BeforePageDisplay": "SimpleMapsHooks::onBeforePageDisplay",
-    "ResourceLoaderGetConfigVars": "SimpleMapsHooks::onResourceLoaderGetConfigVars"
+    "ResourceLoaderGetConfigVars": "SimpleMapsHooks::onResourceLoaderGetConfigVars",
+    "OutputPageBeforeHTML": "SimpleMapsHooks::onOutputPageBeforeHTML"
   },
   "config": {
     "SimpleMapsRenderingClass": {
