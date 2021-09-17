@@ -1,29 +1,6 @@
 (function () {
 	var simpleMapIdCounter = 0;
   var simpleMapsConfig = mw.config.get('wgSimpleMaps');
-	/**
-	 * We want to make sure that our simpleMaps harness is run safely after DOM is loaded.
-	 * This will either wait for the DOM event, or see if the DOM event had already been
-	 * fired.
-	 */
-	function runAfterLoaded(callback) {
-		if (document.readyState === "complete") {
-			callback();
-		} else if(window.attachEvent) {
-			window.attachEvent('onload', callback);
-		} else {
-			if(window.onload) {
-				var currentOnLoad = window.onload;
-				var newOnLoad = function(evt) {
-					currentOnLoad(evt);
-					callback(evt);
-				};
-				window.onload = newOnLoad;
-			} else {
-				window.onload = callback;
-			}
-		}
-	}
 
 	function loadFieldMap(mapTable) {
 		var fieldMap = {
@@ -116,7 +93,7 @@
 		return latLngs;
 	}
 
-	runAfterLoaded(function () {
+	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
 			var mapDiv = addMapNodeBeforeTable(mapTable);
@@ -139,5 +116,6 @@
 			});
 			simpleMap.fitBounds(bounds);
 		})
-	})
+	}
+	renderMaps();
 })()
