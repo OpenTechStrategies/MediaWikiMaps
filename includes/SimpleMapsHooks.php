@@ -15,6 +15,8 @@ class SimpleMapsHooks {
 		// https://www.mediawiki.org/wiki/Manual:Hooks/ResourceLoaderGetConfigVars
 		$vars['wgSimpleMaps'] = [
 			'renderingClass' => $config->get('SimpleMapsRenderingClass'),
+			'tileLayerUrl' => $config->get('SimpleMapsTileLayerUrl'),
+			'tileLayerAttribution' => $config->get('SimpleMapsTileLayerAttribution'),
 		];
 
 		return true;

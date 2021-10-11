@@ -49,6 +49,14 @@
     "SimpleMapsRenderingClass": {
       "description": "The WikiTable class which will trigger SimpleMaps.",
       "value": "simpleMap"
+    },
+    "SimpleMapsTileLayerUrl": {
+      "description": "The URL for the tile layer to use in leaflet. (see https://leafletjs.com/reference-1.7.1.html#tilelayer)",
+      "value": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    "SimpleMapsTileLayerAttribution": {
+      "description": "The attribution string associated with the configured tile data.",
+      "value": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
     }
   },
   "manifest_version": 2

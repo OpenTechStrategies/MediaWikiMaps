@@ -98,8 +98,8 @@
 		mapTables.forEach(function (mapTable) {
 			var mapDiv = addMapNodeBeforeTable(mapTable);
 			var simpleMap = L.map(mapDiv.id).setView([0,0], 0);
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			L.tileLayer(simpleMapsConfig.tileLayerUrl, {
+				attribution: simpleMapsConfig.tileLayerAttribution,
 			}).addTo(simpleMap);
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
