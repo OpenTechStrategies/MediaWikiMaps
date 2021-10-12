@@ -4,6 +4,7 @@ This project adds basic map visualization functionality to wikis using specifica
 ## Extension settings
 
 * `SimpleMapsRenderingClass` (default is `simpleMap`): the table class that SimpleMaps will look for to know which wiki tables to convert to a map.
+* `SimpleMapsSettingsClass` (default is `simpleMapSettings`): the table class that SimpleMaps will look for to define settings associated with a given map.
 * SimpleMapsTileLayerUrl: the tileset url that SimpleMaps will use when rendering maps.
 * SimpleMapsTileLayerAttribution: the attribution for the tile data.
 
