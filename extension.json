@@ -50,6 +50,10 @@
       "description": "The WikiTable class which will trigger SimpleMaps.",
       "value": "simpleMap"
     },
+    "SimpleMapsSettingsClass": {
+      "description": "The WikiTable class which will indicate that the table contains map-specific settings for a SimpleMap.",
+      "value": "simpleMapSettings"
+    },
     "SimpleMapsTileLayerUrl": {
       "description": "The URL for the tile layer to use in leaflet. (see https://leafletjs.com/reference-1.7.1.html#tilelayer)",
       "value": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
