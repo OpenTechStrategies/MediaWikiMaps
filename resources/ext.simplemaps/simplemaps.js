@@ -84,6 +84,9 @@
 			'lng',
 			'popupContent',
 			'icon',
+			'feature',
+			'fillColor',
+			'borderColor',
 		]);
 	}
 
@@ -108,6 +111,7 @@
 	function loadSettingsFieldMap(settingsTable) {
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
+			'featureCollectionJson',
 		]);
 	}
 
@@ -132,7 +136,7 @@
 				return row.cells[1];
 			}
 		}
-		return null;
+		return document.createElement('td');
 	}
 
 	function getMarkersFromMapTable(mapTable) {
@@ -146,6 +150,9 @@
 				lat: null,
 				lng: null,
 				popupContent: '',
+				feature: null,
+				borderColor: '',
+				fillColor: '',
 			}
 			if (fieldExists(fieldMap.lat, row.cells)) {
 				marker.lat = Number.parseFloat(row.cells[fieldMap.lat].textContent);
@@ -156,8 +163,17 @@
 			if (fieldExists(fieldMap.popupContent, row.cells)) {
 				marker.popupContent = row.cells[fieldMap.popupContent].innerHTML;
 			}
-			if (fieldExists(fieldMap.popupContent, row.cells)) {
+			if (fieldExists(fieldMap.icon, row.cells)) {
 				marker.icon = row.cells[fieldMap.icon].textContent.trim();
+			}
+			if (fieldExists(fieldMap.feature, row.cells)) {
+				marker.feature = row.cells[fieldMap.feature].textContent.trim();
+			}
+			if (fieldExists(fieldMap.borderColor, row.cells)) {
+				marker.borderColor = row.cells[fieldMap.borderColor].textContent.trim();
+			}
+			if (fieldExists(fieldMap.fillColor, row.cells)) {
+				marker.fillColor = row.cells[fieldMap.fillColor].textContent.trim();
 			}
 			markers.push(marker);
 		}
@@ -216,12 +232,28 @@
 		return icons;
 	}
 
+	function loadFeatureCollectionFeaturesFromString(str) {
+		var featureCollection = JSON.parse(str);
+		var features = {};
+		featureCollection.features.forEach((feature) => {
+			features[feature.id] = feature;
+		})
+		return features;
+	}
+
 	function loadSettingsFromSettingsTable(settingsTable) {
 		var fieldMap = loadSettingsFieldMap(settingsTable);
 		var rows = settingsTable.rows;
 		var settings = {
-			icons: loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows))),
+			icons: {},
+			features: {},
 		};
+		if (fieldExists(fieldMap.icons, rows)) {
+			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
+		}
+		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
+			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
+		}
 		return settings;
 	}
 
@@ -237,16 +269,29 @@
 		return document.querySelectorAll('table.' + simpleMapsConfig.renderingClass);
 	}
 
-	function getLatLngsFromMarkers(markers) {
-		let latLngs = markers.map(function (marker) {
-			if(!isNaN(marker.lat) && !isNaN(marker.lng)) {
-				return [marker.lat, marker.lng];
+	function hasLatLng(marker) {
+		return !isNaN(marker.lat)
+			&& !isNaN(marker.lng)
+			&& marker.lat !== ''
+			&& marker.lng !== '';
+	}
+
+	function hasFeature(marker, features) {
+		return marker.feature && featureExists(marker.feature, features);
+	}
+
+	function getLatLngsFromMarkers(markers, features) {
+		return markers.flatMap(function (marker) {
+			var latLngs = []
+			if (hasLatLng(marker)) {
+				latLngs.push([marker.lat, marker.lng]);
 			};
-			return null;
-		}).filter(function (latLng) {
-			return latLng !== null;
+			if (hasFeature(marker, features)) {
+				console.log(features[marker.feature].geometry.coordinates[0]);
+				latLngs.push(...features[marker.feature].geometry.coordinates[0])
+			}
+			return latLngs;
 		});
-		return latLngs;
 	}
 
 	function loadSettings() {
@@ -267,6 +312,10 @@
 		return null;
 	}
 
+	function featureExists(featureId, features) {
+		return featureId in features;
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -278,11 +327,12 @@
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
+			var features = getLocalSetting('features');
 			var markers = getMarkersFromMapTable(mapTable);
-			var latLngs = getLatLngsFromMarkers(markers);
+			var latLngs = getLatLngsFromMarkers(markers, features);
 			var bounds = new L.LatLngBounds(latLngs);
 			markers.forEach(function(marker) {
-				if(!isNaN(marker.lat) && !isNaN(marker.lng)) {
+				if (hasLatLng(marker)) {
 					var markerSettings = {};
 
 					if (marker.icon && icons && icons.hasOwnProperty(marker.icon)) {
@@ -296,6 +346,19 @@
 					if (marker.popupContent) {
 						leafletMarker.bindPopup(marker.popupContent);
 					}
+				}
+				if (hasFeature(marker, features)) {
+					var style = {};
+					if (marker.fillColor !== '') {
+						style.fillColor = marker.fillColor;
+					}
+					if (marker.borderColor !== '') {
+						style.color = marker.borderColor
+					}
+					L.geoJson(
+						features[marker.feature],
+						{ style: style },
+					).addTo(simpleMap);
 				}
 			});
 			simpleMap.fitBounds(bounds);
