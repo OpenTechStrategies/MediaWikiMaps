@@ -85,6 +85,8 @@
 			'popupContent',
 			'icon',
 			'feature',
+			'fillColor',
+			'borderColor',
 		]);
 	}
 
@@ -148,6 +150,9 @@
 				lat: null,
 				lng: null,
 				popupContent: '',
+				feature: null,
+				borderColor: '',
+				fillColor: '',
 			}
 			if (fieldExists(fieldMap.lat, row.cells)) {
 				marker.lat = Number.parseFloat(row.cells[fieldMap.lat].textContent);
@@ -163,6 +168,12 @@
 			}
 			if (fieldExists(fieldMap.feature, row.cells)) {
 				marker.feature = row.cells[fieldMap.feature].textContent.trim();
+			}
+			if (fieldExists(fieldMap.borderColor, row.cells)) {
+				marker.borderColor = row.cells[fieldMap.borderColor].textContent.trim();
+			}
+			if (fieldExists(fieldMap.fillColor, row.cells)) {
+				marker.fillColor = row.cells[fieldMap.fillColor].textContent.trim();
 			}
 			markers.push(marker);
 		}
@@ -337,7 +348,17 @@
 					}
 				}
 				if (hasFeature(marker, features)) {
-					L.geoJson(features[marker.feature]).addTo(simpleMap);
+					var style = {};
+					if (marker.fillColor !== '') {
+						style.fillColor = marker.fillColor;
+					}
+					if (marker.borderColor !== '') {
+						style.color = marker.borderColor
+					}
+					L.geoJson(
+						features[marker.feature],
+						{ style: style },
+					).addTo(simpleMap);
 				}
 			});
 			simpleMap.fitBounds(bounds);
