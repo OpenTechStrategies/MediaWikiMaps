@@ -320,7 +320,10 @@
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
 			var mapDiv = addMapNodeBeforeTable(mapTable);
-			var simpleMap = L.map(mapDiv.id).setView([0,0], 0);
+			var simpleMap = L.map(
+				mapDiv.id,
+				{ 'tap': false } // See https://github.com/Leaflet/Leaflet/issues/7255#issuecomment-849638476
+			).setView([0,0], 0);
 			L.tileLayer(simpleMapsConfig.tileLayerUrl, {
 				attribution: simpleMapsConfig.tileLayerAttribution,
 			}).addTo(simpleMap);
