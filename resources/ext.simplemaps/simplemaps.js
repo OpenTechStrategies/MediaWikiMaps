@@ -114,6 +114,7 @@
 			'icons',
 			'featureCollectionJson',
 			'overlayDefault',
+			'overlayTitle',
 		]);
 	}
 
@@ -254,6 +255,7 @@
 			icons: {},
 			features: {},
 			overlayDefault: null,
+			overlayTitle: '',
 		};
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
@@ -263,6 +265,9 @@
 		}
 		if (fieldExists(fieldMap.overlayDefault, rows)) {
 			settings.overlayDefault = getSettingFromRows(fieldMap.overlayDefault, rows).innerHTML;
+		}
+		if (fieldExists(fieldMap.overlayTitle, rows)) {
+			settings.overlayTitle = getSettingFromRows(fieldMap.overlayTitle, rows).textContent.trim();
 		}
 		return settings;
 	}
@@ -353,7 +358,7 @@
 		overlayPane.update();
 	}
 
-	function generateOverlayControl(defaultContent) {
+	function generateOverlayControl(defaultContent, title) {
 		var overlay = L.control();
 		overlay._div = L.DomUtil.create('div', 'simpleMapOverlay');
 		overlay.onAdd = function (map) {
@@ -361,7 +366,9 @@
 			return this._div;
 		};
 		overlay.update = function (overlayContent) {
-			this._div.innerHTML = overlayContent ? overlayContent : defaultContent;
+			var titleHtml = title ? '<h1>' + title + '</h1>' : '';
+			var contentHtml = (overlayContent ? overlayContent : defaultContent)
+			this._div.innerHTML = titleHtml + contentHtml;
 		};
 		return overlay;
 	}
@@ -406,10 +413,11 @@
 			var icons = getLocalSetting('icons');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
+			var overlayTitle = getLocalSetting('overlayTitle');
 			var markers = getMarkersFromMapTable(mapTable);
 			var latLngs = getLatLngsFromMarkers(markers, features);
 			var bounds = new L.LatLngBounds(latLngs);
-			var overlay = generateOverlayControl(overlayDefault)
+			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
 			if (overlayDefault) {
 				overlay.addTo(simpleMap);
 			}
