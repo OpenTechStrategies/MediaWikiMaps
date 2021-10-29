@@ -272,6 +272,8 @@
 	function hasLatLng(marker) {
 		return !isNaN(marker.lat)
 			&& !isNaN(marker.lng)
+			&& marker.lat !== null
+			&& marker.lng !== null
 			&& marker.lat !== ''
 			&& marker.lng !== '';
 	}
@@ -287,8 +289,7 @@
 				latLngs.push([marker.lat, marker.lng]);
 			};
 			if (hasFeature(marker, features)) {
-				console.log(features[marker.feature].geometry.coordinates[0]);
-				latLngs.push(...features[marker.feature].geometry.coordinates[0])
+				latLngs.push(...L.GeoJSON.coordsToLatLngs(features[marker.feature].geometry.coordinates[0]));
 			}
 			return latLngs;
 		});
