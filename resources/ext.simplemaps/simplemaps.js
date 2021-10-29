@@ -87,6 +87,7 @@
 			'feature',
 			'fillColor',
 			'borderColor',
+			'featureLabel',
 		]);
 	}
 
@@ -174,6 +175,9 @@
 			}
 			if (fieldExists(fieldMap.fillColor, row.cells)) {
 				marker.fillColor = row.cells[fieldMap.fillColor].textContent.trim();
+			}
+			if (fieldExists(fieldMap.featureLabel, row.cells)) {
+				marker.featureLabel = row.cells[fieldMap.featureLabel].textContent.trim();
 			}
 			markers.push(marker);
 		}
@@ -272,12 +276,19 @@
 	function hasLatLng(marker) {
 		return !isNaN(marker.lat)
 			&& !isNaN(marker.lng)
+			&& marker.lat !== null
+			&& marker.lng !== null
 			&& marker.lat !== ''
 			&& marker.lng !== '';
 	}
 
 	function hasFeature(marker, features) {
 		return marker.feature && featureExists(marker.feature, features);
+	}
+
+	function hasFeatureLabel(marker) {
+		return marker.featureLabel !== null
+			&& marker.featureLabel !== '';
 	}
 
 	function getLatLngsFromMarkers(markers, features) {
@@ -287,8 +298,7 @@
 				latLngs.push([marker.lat, marker.lng]);
 			};
 			if (hasFeature(marker, features)) {
-				console.log(features[marker.feature].geometry.coordinates[0]);
-				latLngs.push(...features[marker.feature].geometry.coordinates[0])
+				latLngs.push(...L.GeoJSON.coordsToLatLngs(features[marker.feature].geometry.coordinates[0]));
 			}
 			return latLngs;
 		});
@@ -316,6 +326,44 @@
 		return featureId in features;
 	}
 
+	function generateFeatureLabel(featureGeoJson, labelText) {
+		var center = featureGeoJson.getBounds().getCenter();
+		console.log(center);
+		const featureLabel = L.marker(
+			center,
+			{
+				opacity: 0.00,
+				icon: L.divIcon({
+					popupAnchor: [0, 0],
+				})
+			},
+		)
+		featureLabel.bindTooltip(
+			labelText,
+			{
+				permanent: true,
+				direction: 'center',
+				className: 'simpleMapFeatureLabel',
+			},
+		)
+		return featureLabel;
+	}
+
+	function generateFeatureGeoJson(features, marker) {
+		var style = {};
+		if (marker.fillColor !== '') {
+			style.fillColor = marker.fillColor;
+		}
+		if (marker.borderColor !== '') {
+			style.color = marker.borderColor
+		}
+		var featureGeoJson = L.geoJson(
+			features[marker.feature],
+			{ style: style },
+		);
+		return featureGeoJson;
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -337,7 +385,6 @@
 			markers.forEach(function(marker) {
 				if (hasLatLng(marker)) {
 					var markerSettings = {};
-
 					if (marker.icon && icons && icons.hasOwnProperty(marker.icon)) {
 						markerSettings.icon = icons[marker.icon];
 					}
@@ -351,19 +398,15 @@
 					}
 				}
 				if (hasFeature(marker, features)) {
-					var style = {};
-					if (marker.fillColor !== '') {
-						style.fillColor = marker.fillColor;
+					var featureGeoJson = generateFeatureGeoJson(features, marker);
+					featureGeoJson.addTo(simpleMap);
+					if(hasFeatureLabel(marker.featureLabel)) {
+						const labelMarker = generateFeatureLabel(featureGeoJson, marker.featureLabel);
+						labelMarker.addTo(simpleMap)
 					}
-					if (marker.borderColor !== '') {
-						style.color = marker.borderColor
-					}
-					L.geoJson(
-						features[marker.feature],
-						{ style: style },
-					).addTo(simpleMap);
 				}
 			});
+			console.log(bounds);
 			simpleMap.fitBounds(bounds);
 		})
 	}

@@ -23,6 +23,7 @@ SimpleMap looks for certain column headers to know how to process a table.  Thes
 * `Feature`: Use a custom icon, as defined by a simple map settings table. This field is required in order to render a polygon.
 * `Fill Color`: A hex value to apply to the feature shape's fill color.
 * `Border Color`: A hex value to apply to the feature shape's border color.
+* `Feature Label`: A string to display in the center of the specified feature.
 
 ### SimpleMapSettings Columns
 
