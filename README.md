@@ -23,6 +23,7 @@ SimpleMap looks for certain column headers to know how to process a table.  Thes
 * `Feature`: Use a custom icon, as defined by a simple map settings table. This field is required in order to render a polygon.
 * `Fill Color`: A hex value to apply to the feature shape's fill color.
 * `Border Color`: A hex value to apply to the feature shape's border color.
+* `Overlay Content`: An HTML block that is rendered when a feature is hovered over.
 
 ### SimpleMapSettings Columns
 
@@ -32,6 +33,7 @@ Below are the valid setting names:
 
 * `Icons`: an embedded table (see the `Custom Icons` section) which defines custom icons for use by markers in a SimpleMap.
 * `Feature Collection JSON`: A JSON string which contains a [GeoJSON Feature Collection](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3).  Feature IDs can be referenced by map data.
+* `Overlay Default`: An HTML block that is rendered in the overlay pane when no element has been selected. This must be present in order to render an overlay pane.
 
 #### Icon Columns
 

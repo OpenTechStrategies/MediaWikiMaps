@@ -87,6 +87,7 @@
 			'feature',
 			'fillColor',
 			'borderColor',
+			'overlayContent',
 		]);
 	}
 
@@ -112,6 +113,7 @@
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
 			'featureCollectionJson',
+			'overlayDefault',
 		]);
 	}
 
@@ -153,6 +155,7 @@
 				feature: null,
 				borderColor: '',
 				fillColor: '',
+				overlayContent: '',
 			}
 			if (fieldExists(fieldMap.lat, row.cells)) {
 				marker.lat = Number.parseFloat(row.cells[fieldMap.lat].textContent);
@@ -174,6 +177,9 @@
 			}
 			if (fieldExists(fieldMap.fillColor, row.cells)) {
 				marker.fillColor = row.cells[fieldMap.fillColor].textContent.trim();
+			}
+			if (fieldExists(fieldMap.overlayContent, row.cells)) {
+				marker.overlayContent = row.cells[fieldMap.overlayContent].textContent.trim();
 			}
 			markers.push(marker);
 		}
@@ -247,12 +253,16 @@
 		var settings = {
 			icons: {},
 			features: {},
+			overlayDefault: null,
 		};
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
+		}
+		if (fieldExists(fieldMap.overlayDefault, rows)) {
+			settings.overlayDefault = getSettingFromRows(fieldMap.overlayDefault, rows).innerHTML;
 		}
 		return settings;
 	}
@@ -280,6 +290,11 @@
 
 	function hasFeature(marker, features) {
 		return marker.feature && featureExists(marker.feature, features);
+	}
+
+	function hasOverlayContent(marker) {
+		return marker.overlayContent !== null
+			&& marker.overlayContent !== '';
 	}
 
 	function getLatLngsFromMarkers(markers, features) {
@@ -312,9 +327,67 @@
 		}
 		return null;
 	}
+	function getMapSettings() {
+		if (localSettings.default) {
+			return localSettings.default;
+		}
+		return {};
+	}
 
 	function featureExists(featureId, features) {
 		return featureId in features;
+	}
+
+	function onFeatureMouseOver(e) {
+		var layer = e.target;
+		var marker = layer.feature.properties.simpleMapMarker;
+		if (hasOverlayContent(marker)) {
+			var overlayPane = layer.feature.properties.simpleMapOverlayPane;
+			overlayPane.update(marker.overlayContent);
+		}
+	}
+
+	function onFeatureMouseOut(e) {
+		var layer = e.target;
+		var overlayPane = layer.feature.properties.simpleMapOverlayPane;
+		overlayPane.update();
+	}
+
+	function generateOverlayControl(defaultContent) {
+		var overlay = L.control();
+		overlay._div = L.DomUtil.create('div', 'simpleMapOverlay');
+		overlay.onAdd = function (map) {
+			this.update();
+			return this._div;
+		};
+		overlay.update = function (overlayContent) {
+			this._div.innerHTML = overlayContent ? overlayContent : defaultContent;
+		};
+		return overlay;
+	}
+
+	function generateGeoJsonFeature(decoratedFeature) {
+		var marker = decoratedFeature.properties.simpleMapMarker;
+		var style = {};
+		if (marker.fillColor !== '') {
+			style.fillColor = marker.fillColor;
+		}
+		if (marker.borderColor !== '') {
+			style.color = marker.borderColor
+		}
+		var featureGeoJson = L.geoJson(
+			decoratedFeature,
+			{
+				style: style,
+				onEachFeature: function (feaure, layer) {
+					layer.on({
+						mouseover: onFeatureMouseOver,
+						mouseout: onFeatureMouseOut,
+					});
+				}
+			},
+		);
+		return featureGeoJson;
 	}
 
 	function renderMaps() {
@@ -332,9 +405,15 @@
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
 			var features = getLocalSetting('features');
+			var overlayDefault = getLocalSetting('overlayDefault');
 			var markers = getMarkersFromMapTable(mapTable);
 			var latLngs = getLatLngsFromMarkers(markers, features);
 			var bounds = new L.LatLngBounds(latLngs);
+			var overlay = generateOverlayControl(overlayDefault)
+			if (overlayDefault) {
+				overlay.addTo(simpleMap);
+			}
+
 			markers.forEach(function(marker) {
 				if (hasLatLng(marker)) {
 					var markerSettings = {};
@@ -352,17 +431,11 @@
 					}
 				}
 				if (hasFeature(marker, features)) {
-					var style = {};
-					if (marker.fillColor !== '') {
-						style.fillColor = marker.fillColor;
-					}
-					if (marker.borderColor !== '') {
-						style.color = marker.borderColor
-					}
-					L.geoJson(
-						features[marker.feature],
-						{ style: style },
-					).addTo(simpleMap);
+					var decoratedFeature = features[marker.feature];
+					decoratedFeature.properties.simpleMapMarker = marker;
+					decoratedFeature.properties.simpleMapOverlayPane = overlay;
+					var featureGeoJson = generateGeoJsonFeature(decoratedFeature);
+					featureGeoJson.addTo(simpleMap);
 				}
 			});
 			simpleMap.fitBounds(bounds);
