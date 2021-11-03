@@ -302,17 +302,18 @@
 			&& marker.overlayContent !== '';
 	}
 
-	function getLatLngsFromMarkers(markers, features) {
-		return markers.flatMap(function (marker) {
+	function getBoundsFromMarkers(markers, features) {
+		var coordinateSets = markers.flatMap(function (marker) {
 			var latLngs = []
 			if (hasLatLng(marker)) {
 				latLngs.push([marker.lat, marker.lng]);
 			};
 			if (hasFeature(marker, features)) {
-				latLngs.push(...L.GeoJSON.coordsToLatLngs(features[marker.feature].geometry.coordinates[0]));
+				latLngs.push(L.geoJson(features[marker.feature]).getBounds());
 			}
 			return latLngs;
 		});
+		return new L.LatLngBounds(coordinateSets);
 	}
 
 	function loadSettings() {
@@ -415,8 +416,7 @@
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
 			var markers = getMarkersFromMapTable(mapTable);
-			var latLngs = getLatLngsFromMarkers(markers, features);
-			var bounds = new L.LatLngBounds(latLngs);
+			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
 			if (overlayDefault) {
 				overlay.addTo(simpleMap);
