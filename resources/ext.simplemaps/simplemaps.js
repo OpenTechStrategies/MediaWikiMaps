@@ -376,7 +376,12 @@
 
 	function generateGeoJsonFeature(decoratedFeature) {
 		var marker = decoratedFeature.properties.simpleMapMarker;
-		var style = {};
+		var style = {
+			fillOpacity: 0.7,
+			fillColor: '#fff',
+			color: '#aaa',
+			weight: 2,
+		};
 		if (marker.fillColor !== '') {
 			style.fillColor = marker.fillColor;
 		}
