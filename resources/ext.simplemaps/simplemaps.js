@@ -109,9 +109,17 @@
 		]);
 	}
 
+	function loadLayerFieldMap(layersTable) {
+		return loadFieldMapFromColumns(layersTable, [
+			'id',
+			'label',
+		]);
+	}
+
 	function loadSettingsFieldMap(settingsTable) {
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
+			'layers',
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
@@ -187,6 +195,27 @@
 		return markers;
 	}
 
+	function loadLayersFromLayersTable(layersTable) {
+		var layers = {};
+		if (isTable(layersTable)) {
+			var fieldMap = loadLayerFieldMap(layersTable);
+			for (var i = 1; i < layersTable.rows.length; i++) {
+				var row = layersTable.rows[i]
+				if(fieldExists(fieldMap.id, row.cells)) {
+					var layerId = row.cells[fieldMap.id].textContent.trim();
+					var layerSettings = {
+						label: '',
+					};
+					if (fieldExists(fieldMap.label, row.cells)) {
+						layerSettings.label = row.cells[fieldMap.label].innerHTML;
+					}
+					layers[layerId] = layerSettings;
+				}
+			}
+		}
+		return layers;
+	}
+
 	function loadIconsFromIconsTable(iconsTable) {
 		var icons = {};
 		if (isTable(iconsTable)) {
@@ -253,12 +282,16 @@
 		var rows = settingsTable.rows;
 		var settings = {
 			icons: {},
+			layers: {},
 			features: {},
 			overlayDefault: null,
 			overlayTitle: '',
 		};
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
+		}
+		if (fieldExists(fieldMap.layers, rows)) {
+			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
