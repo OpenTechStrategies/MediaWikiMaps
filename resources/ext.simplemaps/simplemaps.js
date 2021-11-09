@@ -470,7 +470,6 @@
 				overlayItems[layerLabel] = layerGroup;
 			}
 		})
-		console.log(overlayItems);
 		return L.control.layers({}, overlayItems);
 	}
 
@@ -536,6 +535,7 @@
 			var layerGroupControl = generateLayerGroupControl(layerGroups, layers);
 			if (Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
+				layerGroupControl.getContainer().classList.add('simpleMapControl');
 			}
 			simpleMap.fitBounds(bounds);
 		})

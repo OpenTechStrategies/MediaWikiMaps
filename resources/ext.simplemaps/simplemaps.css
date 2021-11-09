@@ -3,12 +3,21 @@ div.simpleMap {
 	width: 100%;
 }
 
-div.simpleMapOverlay {
+.leaflet-touch div.simpleMapOverlay {
 	padding: 6px 8px;
 	font: 14px/16px Arial, Helvetica, sans-serif;
 	background: white;
-	background: rgba(255,255,255,0.8);
+	background: rgba(255,255,255,.95);
 	box-shadow: 0 0 15px rgba(0,0,0,0.2);
 	border-radius: 5px;
-	min-width: 200px;
+	border: 0px;
+}
+
+.leaflet-touch div.simpleMapControl {
+	font: 14px/16px Arial, Helvetica, sans-serif;
+	background: white;
+	background: rgba(255,255,255,.95);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	border-radius: 5px;
+	border: 0px;
 }
