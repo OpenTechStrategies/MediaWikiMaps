@@ -84,6 +84,7 @@
 			'lng',
 			'popupContent',
 			'icon',
+			'layer',
 			'feature',
 			'fillColor',
 			'borderColor',
@@ -177,6 +178,9 @@
 			}
 			if (fieldExists(fieldMap.icon, row.cells)) {
 				marker.icon = row.cells[fieldMap.icon].textContent.trim();
+			}
+			if (fieldExists(fieldMap.layer, row.cells)) {
+				marker.layer = row.cells[fieldMap.layer].textContent.trim();
 			}
 			if (fieldExists(fieldMap.feature, row.cells)) {
 				marker.feature = row.cells[fieldMap.feature].textContent.trim();
@@ -330,6 +334,10 @@
 		return marker.feature && featureExists(marker.feature, features);
 	}
 
+	function hasLayer(marker, layers) {
+		return marker.layer && layerExists(marker.layer, layers);
+	}
+
 	function hasOverlayContent(marker) {
 		return marker.overlayContent !== null
 			&& marker.overlayContent !== '';
@@ -373,8 +381,16 @@
 		return {};
 	}
 
+	function attributeExists(attribute, obj) {
+		return attribute in obj;
+	}
+
 	function featureExists(featureId, features) {
-		return featureId in features;
+		return attributeExists(featureId, features);
+	}
+
+	function layerExists(layerId, layers) {
+		return attributeExists(layerId, layers);
 	}
 
 	function onFeatureMouseOver(e) {
@@ -436,6 +452,28 @@
 		return featureGeoJson;
 	}
 
+	function generateLayerGroups(layers) {
+		var layerGroups = {
+			default: L.layerGroup(),
+		};
+		Object.entries(layers).forEach(function([layerId, layer]) {
+			layerGroups[layerId] = L.layerGroup();
+		});
+		return layerGroups;
+	}
+
+	function generateLayerGroupControl(layerGroups, layers) {
+		var overlayItems = {};
+		Object.entries(layerGroups).forEach(function([layerId, layerGroup]) {
+			if (layerExists(layerId, layers)) {
+				var layerLabel = layers[layerId].label;
+				overlayItems[layerLabel] = layerGroup;
+			}
+		})
+		console.log(overlayItems);
+		return L.control.layers({}, overlayItems);
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -450,17 +488,24 @@
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
+			var layers = getLocalSetting('layers');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
 			var markers = getMarkersFromMapTable(mapTable);
 			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
+			var layerGroups = generateLayerGroups(layers);
+
 			if (overlayDefault) {
 				overlay.addTo(simpleMap);
 			}
 
 			markers.forEach(function(marker) {
+				var layerGroup = 'default';
+				if (hasLayer(marker, layers)) {
+					layerGroup = marker.layer;
+				}
 				if (hasLatLng(marker)) {
 					var markerSettings = {};
 
@@ -470,7 +515,7 @@
 					var leafletMarker = L.marker(
 						[marker.lat, marker.lng],
 						markerSettings,
-					).addTo(simpleMap);
+					).addTo(layerGroups[layerGroup]);
 
 					if (marker.popupContent) {
 						leafletMarker.bindPopup(marker.popupContent);
@@ -481,9 +526,17 @@
 					decoratedFeature.properties.simpleMapMarker = marker;
 					decoratedFeature.properties.simpleMapOverlayPane = overlay;
 					var featureGeoJson = generateGeoJsonFeature(decoratedFeature);
-					featureGeoJson.addTo(simpleMap);
+					featureGeoJson.addTo(layerGroups[layerGroup]);
 				}
 			});
+
+			Object.entries(layerGroups).forEach(function([key, layerGroup]) {
+				simpleMap.addLayer(layerGroup);
+			});
+			var layerGroupControl = generateLayerGroupControl(layerGroups, layers);
+			if (Object.entries(layers).length > 0) {
+				layerGroupControl.addTo(simpleMap);
+			}
 			simpleMap.fitBounds(bounds);
 		})
 	}
