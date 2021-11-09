@@ -20,6 +20,7 @@ SimpleMap looks for certain column headers to know how to process a table.  Thes
 * `Lng`: The longitude of the pin to be added. This field is required in order to render a pin.
 * `Popup Content`: An optional label which will appear as a popup.
 * `Icon`: Use a custom icon, as defined by a simple map settings table.
+* `Layer`: Associate this marker with a specific layer defined in the settings table.
 * `Feature`: Use a custom icon, as defined by a simple map settings table. This field is required in order to render a polygon.
 * `Fill Color`: A hex value to apply to the feature shape's fill color.
 * `Border Color`: A hex value to apply to the feature shape's border color.
@@ -32,11 +33,12 @@ It is possible to modify the settings of all SimpleMaps instance on a page by cr
 Below are the valid setting names:
 
 * `Icons`: an embedded table (see the `Custom Icons` section) which defines custom icons for use by markers in a SimpleMap.
+* `Layers`: an embedded table (see the `Custom Layers` section) which defines custom layers which markers can be assigned to in a SimpleMap.
 * `Feature Collection JSON`: A JSON string which contains a [GeoJSON Feature Collection](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3).  Feature IDs can be referenced by map data.
 * `Overlay Title`: An optional string which, if set, will render before any content on the overlay pane as a title.
 * `Overlay Default`: An HTML block that is rendered in the overlay pane when no element has been selected. This must be present in order to render an overlay pane.
 
-#### Icon Columns
+#### Custom Icons
 
 Defining a custom Icon requires several fields.  These fields are used to populate the [Leaflet custom icon object](https://leafletjs.com/reference-1.7.1.html#icon).
 
@@ -53,6 +55,13 @@ Defining a custom Icon requires several fields.  These fields are used to popula
 * `Shadow Anchor Y` (optional): The Y coordinate of the [shadow anchor](https://leafletjs.com/reference-1.7.1.html#icon-shadowanchor).
 * `Popup Anchor X` (optional): The X coordinate of the [popup anchor](https://leafletjs.com/reference-1.7.1.html#icon-popupanchor).
 * `Popup Anchor Y` (optional): The Y coordinate of the [popup anchor](https://leafletjs.com/reference-1.7.1.html#icon-popupanchor).
+
+#### Custom Layers
+
+A custom layer table allows a map maker to assign their markers to layer sets which can then be toggled by the end user.  The layer fields are:
+
+* `Id`: The identifier / name which markers can specify in order to be part of this layer.
+* `Label`: An HTML string which is rendered to the end user allowing them to toggle the layer on / off.
 
 #### Example Settings Table
 
@@ -95,6 +104,20 @@ For instance, this table would define a new icon type of 'flag'.
    | 62
    | -3
    | -76
+   |}
+ |-
+ |Layers
+ |
+  {|
+   |-
+   ! Id
+   ! Label
+   |-
+   | finalists
+   | <b>Finalists</b> (round 2)
+   |-
+   | semifinalists
+   | <b>Semifinalists</b> (round 1)
    |}
  |}
  ```

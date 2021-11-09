@@ -84,6 +84,7 @@
 			'lng',
 			'popupContent',
 			'icon',
+			'layer',
 			'feature',
 			'fillColor',
 			'borderColor',
@@ -109,9 +110,17 @@
 		]);
 	}
 
+	function loadLayerFieldMap(layersTable) {
+		return loadFieldMapFromColumns(layersTable, [
+			'id',
+			'label',
+		]);
+	}
+
 	function loadSettingsFieldMap(settingsTable) {
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
+			'layers',
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
@@ -170,6 +179,9 @@
 			if (fieldExists(fieldMap.icon, row.cells)) {
 				marker.icon = row.cells[fieldMap.icon].textContent.trim();
 			}
+			if (fieldExists(fieldMap.layer, row.cells)) {
+				marker.layer = row.cells[fieldMap.layer].textContent.trim();
+			}
 			if (fieldExists(fieldMap.feature, row.cells)) {
 				marker.feature = row.cells[fieldMap.feature].textContent.trim();
 			}
@@ -185,6 +197,27 @@
 			markers.push(marker);
 		}
 		return markers;
+	}
+
+	function loadLayersFromLayersTable(layersTable) {
+		var layers = {};
+		if (isTable(layersTable)) {
+			var fieldMap = loadLayerFieldMap(layersTable);
+			for (var i = 1; i < layersTable.rows.length; i++) {
+				var row = layersTable.rows[i]
+				if(fieldExists(fieldMap.id, row.cells)) {
+					var layerId = row.cells[fieldMap.id].textContent.trim();
+					var layerSettings = {
+						label: '',
+					};
+					if (fieldExists(fieldMap.label, row.cells)) {
+						layerSettings.label = row.cells[fieldMap.label].innerHTML;
+					}
+					layers[layerId] = layerSettings;
+				}
+			}
+		}
+		return layers;
 	}
 
 	function loadIconsFromIconsTable(iconsTable) {
@@ -253,12 +286,16 @@
 		var rows = settingsTable.rows;
 		var settings = {
 			icons: {},
+			layers: {},
 			features: {},
 			overlayDefault: null,
 			overlayTitle: '',
 		};
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
+		}
+		if (fieldExists(fieldMap.layers, rows)) {
+			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
@@ -295,6 +332,10 @@
 
 	function hasFeature(marker, features) {
 		return marker.feature && featureExists(marker.feature, features);
+	}
+
+	function hasLayer(marker, layers) {
+		return marker.layer && layerExists(marker.layer, layers);
 	}
 
 	function hasOverlayContent(marker) {
@@ -340,8 +381,16 @@
 		return {};
 	}
 
+	function attributeExists(attribute, obj) {
+		return attribute in obj;
+	}
+
 	function featureExists(featureId, features) {
-		return featureId in features;
+		return attributeExists(featureId, features);
+	}
+
+	function layerExists(layerId, layers) {
+		return attributeExists(layerId, layers);
 	}
 
 	function onFeatureMouseOver(e) {
@@ -403,6 +452,27 @@
 		return featureGeoJson;
 	}
 
+	function generateLayerGroups(layers) {
+		var layerGroups = {
+			default: L.layerGroup(),
+		};
+		Object.entries(layers).forEach(function([layerId, layer]) {
+			layerGroups[layerId] = L.layerGroup();
+		});
+		return layerGroups;
+	}
+
+	function generateLayerGroupControl(layerGroups, layers) {
+		var overlayItems = {};
+		Object.entries(layerGroups).forEach(function([layerId, layerGroup]) {
+			if (layerExists(layerId, layers)) {
+				var layerLabel = layers[layerId].label;
+				overlayItems[layerLabel] = layerGroup;
+			}
+		})
+		return L.control.layers({}, overlayItems);
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -417,17 +487,24 @@
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
+			var layers = getLocalSetting('layers');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
 			var markers = getMarkersFromMapTable(mapTable);
 			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
+			var layerGroups = generateLayerGroups(layers);
+
 			if (overlayDefault) {
 				overlay.addTo(simpleMap);
 			}
 
 			markers.forEach(function(marker) {
+				var layerGroup = 'default';
+				if (hasLayer(marker, layers)) {
+					layerGroup = marker.layer;
+				}
 				if (hasLatLng(marker)) {
 					var markerSettings = {};
 
@@ -437,7 +514,7 @@
 					var leafletMarker = L.marker(
 						[marker.lat, marker.lng],
 						markerSettings,
-					).addTo(simpleMap);
+					).addTo(layerGroups[layerGroup]);
 
 					if (marker.popupContent) {
 						leafletMarker.bindPopup(marker.popupContent);
@@ -448,9 +525,18 @@
 					decoratedFeature.properties.simpleMapMarker = marker;
 					decoratedFeature.properties.simpleMapOverlayPane = overlay;
 					var featureGeoJson = generateGeoJsonFeature(decoratedFeature);
-					featureGeoJson.addTo(simpleMap);
+					featureGeoJson.addTo(layerGroups[layerGroup]);
 				}
 			});
+
+			Object.entries(layerGroups).forEach(function([key, layerGroup]) {
+				simpleMap.addLayer(layerGroup);
+			});
+			var layerGroupControl = generateLayerGroupControl(layerGroups, layers);
+			if (Object.entries(layers).length > 0) {
+				layerGroupControl.addTo(simpleMap);
+				layerGroupControl.getContainer().classList.add('simpleMapControl');
+			}
 			simpleMap.fitBounds(bounds);
 		})
 	}
