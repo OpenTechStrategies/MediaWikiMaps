@@ -13,7 +13,7 @@
 	}
 
 	function isTable(obj) {
-		return obj.tagName === 'TABLE';
+		return obj !== null && obj.tagName === 'TABLE';
 	}
 
 	function generateObjectFromAttributeArray(attributes, defaultValue) {
@@ -117,10 +117,20 @@
 		]);
 	}
 
+	function loadLegendFieldMap(legendTable) {
+		return loadFieldMapFromColumns(legendTable, [
+			'key',
+			'value',
+		]);
+	}
+
 	function loadSettingsFieldMap(settingsTable) {
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
 			'layers',
+			'legend',
+			'legendTitle',
+			'legendDescription',
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
@@ -220,6 +230,44 @@
 		return layers;
 	}
 
+	function generateLegendColorKey(color) {
+		return '<i style="background: ' + color + '"></i>';
+	}
+
+	function generateLegendImageKey(imageUrl) {
+		return '<div class="imageContainer"><img src="' + imageUrl + '" /></div>';
+	}
+
+	function generateLegendKey(keyString) {
+		if (keyString.charAt(0) === '#') {
+			return generateLegendColorKey(keyString);
+		} else {
+			return generateLegendImageKey(keyString);
+		}
+	}
+
+	function loadLegendRowsFromLegendTable(legendTable) {
+		var legendRows = [];
+		if (isTable(legendTable)) {
+			var fieldMap = loadLegendFieldMap(legendTable);
+			for (var i = 1; i < legendTable.rows.length; i++) {
+				var row = legendTable.rows[i]
+				var legendRow = {
+					'key': '',
+					'value': '',
+				}
+				if(fieldExists(fieldMap.key, row.cells)) {
+					legendRow.key = generateLegendKey(row.cells[fieldMap.key].textContent.trim());
+				}
+				if(fieldExists(fieldMap.value, row.cells)) {
+					legendRow.value = row.cells[fieldMap.value].innerHTML;
+				}
+				legendRows.push(legendRow);
+			}
+		}
+		return legendRows;
+	}
+
 	function loadIconsFromIconsTable(iconsTable) {
 		var icons = {};
 		if (isTable(iconsTable)) {
@@ -288,6 +336,9 @@
 			icons: {},
 			layers: {},
 			features: {},
+			legendRows: [],
+			legendTitle: '',
+			legendDescription: '',
 			overlayDefault: null,
 			overlayTitle: '',
 		};
@@ -296,6 +347,15 @@
 		}
 		if (fieldExists(fieldMap.layers, rows)) {
 			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
+		}
+		if (fieldExists(fieldMap.legend, rows)) {
+			settings.legendRows = loadLegendRowsFromLegendTable(getFirstChildTable(getSettingFromRows(fieldMap.legend, rows)));
+		}
+		if (fieldExists(fieldMap.legendTitle, rows)) {
+			settings.legendTitle = getSettingFromRows(fieldMap.legendTitle, rows).textContent.trim();
+		}
+		if (fieldExists(fieldMap.legendDescription, rows)) {
+			settings.legendDescription = getSettingFromRows(fieldMap.legendDescription, rows).textContent.innerHTML;
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
@@ -473,6 +533,24 @@
 		return L.control.layers({}, overlayItems);
 	}
 
+	function generateLegend(legendRows, legendTitle, legendDescription) {
+		var legend = L.control({position: 'bottomright'});
+		legend.onAdd = function() {
+			var div = L.DomUtil.create('div', 'info simpleMapLegend')
+			if (legendTitle) {
+				div.innerHTML += '<h1>' + legendTitle + '</h1>';
+			}
+			if (legendDescription) {
+				div.innerHTML += '<div class="description">' + legendDescription + '</div>';
+			}
+			legendRows.forEach(function(legendRow) {
+				div.innerHTML += '<div class="legendRow">' + legendRow.key + legendRow.value + '</div>';
+			});
+			return div;
+		}
+		return legend;
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -488,6 +566,9 @@
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
 			var layers = getLocalSetting('layers');
+			var legendRows = getLocalSetting('legendRows');
+			var legendTitle = getLocalSetting('legendTitle');
+			var legendDescription = getLocalSetting('legendDescription');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
@@ -536,6 +617,11 @@
 			if (Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
+			}
+
+			if (legendRows.length > 0) {
+				var legend = generateLegend(legendRows, legendTitle, legendDescription);
+				legend.addTo(simpleMap)
 			}
 			simpleMap.fitBounds(bounds);
 		})
