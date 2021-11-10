@@ -21,3 +21,23 @@ div.simpleMap {
 	border-radius: 5px;
 	border: 0px;
 }
+
+.leaflet-touch div.simpleMapLegend {
+	font: 14px/16px Arial, Helvetica, sans-serif;
+	background: white;
+	background: rgba(255,255,255,.95);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	border-radius: 5px;
+	border: 0px;
+}
+
+.leaflet-touch div.simpleMapLegend img {
+	display: inline-block;
+	margin-right: 8px;
+}
+.leaflet-touch div.simpleMapLegend i {
+	width: 18px;
+	height: 18px;
+	float: left;
+	margin-right: 8px;
+}

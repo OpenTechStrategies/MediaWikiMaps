@@ -34,6 +34,9 @@ Below are the valid setting names:
 
 * `Icons`: an embedded table (see the `Custom Icons` section) which defines custom icons for use by markers in a SimpleMap.
 * `Layers`: an embedded table (see the `Custom Layers` section) which defines custom layers which markers can be assigned to in a SimpleMap.
+* `Legend`: an embedded table (see the `Legend` section) which defines a legend that can be rendered on a SimpleMap.
+* `Legend Title`: An optional title to render above the legend.
+* `Legend Description`: An optional description (HTML string) for the legend.
 * `Feature Collection JSON`: A JSON string which contains a [GeoJSON Feature Collection](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3).  Feature IDs can be referenced by map data.
 * `Overlay Title`: An optional string which, if set, will render before any content on the overlay pane as a title.
 * `Overlay Default`: An HTML block that is rendered in the overlay pane when no element has been selected. This must be present in order to render an overlay pane.
@@ -62,6 +65,13 @@ A custom layer table allows a map maker to assign their markers to layer sets wh
 
 * `Id`: The identifier / name which markers can specify in order to be part of this layer.
 * `Label`: An HTML string which is rendered to the end user allowing them to toggle the layer on / off.
+
+#### Legend
+
+A legend table which will render on the SimpleMap
+
+* `Key`: The visual element to be rendered as the legend key. This can either be a hex code color or an image URL.
+* `Value`: An HTML string representing the value associated with the visual element.
 
 #### Example Settings Table
 
@@ -118,6 +128,20 @@ For instance, this table would define a new icon type of 'flag'.
    |-
    | semifinalists
    | <b>Semifinalists</b> (round 1)
+   |}
+ |-
+ |Legend
+ |
+  {|
+   |-
+   ! Key
+   ! Value
+   |-
+   | #548080
+   | 0-15
+   |-
+   | #54ffff
+   | 16-100
    |}
  |}
  ```

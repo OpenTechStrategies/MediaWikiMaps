@@ -117,10 +117,20 @@
 		]);
 	}
 
+	function loadLegendFieldMap(legendTable) {
+		return loadFieldMapFromColumns(legendTable, [
+			'key',
+			'value',
+		]);
+	}
+
 	function loadSettingsFieldMap(settingsTable) {
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
 			'layers',
+			'legend',
+			'legendTitle',
+			'legendDescription',
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
@@ -220,6 +230,44 @@
 		return layers;
 	}
 
+	function generateLegendColorKey(color) {
+		return '<i style="background: ' + color + '"></i>';
+	}
+
+	function generateLegendImageKey(imageUrl) {
+		return '<img src="' + imageUrl + '" />';
+	}
+
+	function generateLegendKey(keyString) {
+		if (keyString.charAt(0) === '#') {
+			return generateLegendColorKey(keyString);
+		} else {
+			return generateLegendImageKey(imageUrl);
+		}
+	}
+
+	function loadLegendRowsFromLegendTable(legendTable) {
+		var legendRows = [];
+		if (isTable(legendTable)) {
+			var fieldMap = loadLegendFieldMap(legendTable);
+			for (var i = 1; i < legendTable.rows.length; i++) {
+				var row = legendTable.rows[i]
+				var legendRow = {
+					'key': '',
+					'value': '',
+				}
+				if(fieldExists(fieldMap.key, row.cells)) {
+					legendRow.key = generateLegendKey(row.cells[fieldMap.key].textContent.trim());
+				}
+				if(fieldExists(fieldMap.value, row.cells)) {
+					legendRow.value = ow.cells[fieldMap.value].innerHTML;
+				}
+				legendRows.push(legendRow);
+			}
+		}
+		return legendRows;
+	}
+
 	function loadIconsFromIconsTable(iconsTable) {
 		var icons = {};
 		if (isTable(iconsTable)) {
@@ -288,6 +336,9 @@
 			icons: {},
 			layers: {},
 			features: {},
+			legendRows: [],
+			legendTitle: '',
+			legendDescription: '',
 			overlayDefault: null,
 			overlayTitle: '',
 		};
@@ -296,6 +347,15 @@
 		}
 		if (fieldExists(fieldMap.layers, rows)) {
 			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
+		}
+		if (fieldExists(fieldMap.legend, rows)) {
+			settings.legend = loadLegendRowsFromLegendTable(getFirstChildTable(getSettingFromRows(fieldMap.legend, rows)));
+		}
+		if (fieldExists(fieldMap.legendTitle, rows)) {
+			settings.legendTitle = getSettingFromRows(fieldMap.legendTitle, rows).textContent.trim();
+		}
+		if (fieldExists(fieldMap.legendDescription, rows)) {
+			settings.legendDescription = getSettingFromRows(fieldMap.legendDescription, rows).textContent.innerHTML;
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
