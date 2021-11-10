@@ -13,7 +13,7 @@
 	}
 
 	function isTable(obj) {
-		return obj.tagName === 'TABLE';
+		return obj !== null && obj.tagName === 'TABLE';
 	}
 
 	function generateObjectFromAttributeArray(attributes, defaultValue) {
@@ -235,14 +235,14 @@
 	}
 
 	function generateLegendImageKey(imageUrl) {
-		return '<img src="' + imageUrl + '" />';
+		return '<div class="imageContainer"><img src="' + imageUrl + '" /></div>';
 	}
 
 	function generateLegendKey(keyString) {
 		if (keyString.charAt(0) === '#') {
 			return generateLegendColorKey(keyString);
 		} else {
-			return generateLegendImageKey(imageUrl);
+			return generateLegendImageKey(keyString);
 		}
 	}
 
@@ -260,7 +260,7 @@
 					legendRow.key = generateLegendKey(row.cells[fieldMap.key].textContent.trim());
 				}
 				if(fieldExists(fieldMap.value, row.cells)) {
-					legendRow.value = ow.cells[fieldMap.value].innerHTML;
+					legendRow.value = row.cells[fieldMap.value].innerHTML;
 				}
 				legendRows.push(legendRow);
 			}
@@ -349,7 +349,7 @@
 			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
 		}
 		if (fieldExists(fieldMap.legend, rows)) {
-			settings.legend = loadLegendRowsFromLegendTable(getFirstChildTable(getSettingFromRows(fieldMap.legend, rows)));
+			settings.legendRows = loadLegendRowsFromLegendTable(getFirstChildTable(getSettingFromRows(fieldMap.legend, rows)));
 		}
 		if (fieldExists(fieldMap.legendTitle, rows)) {
 			settings.legendTitle = getSettingFromRows(fieldMap.legendTitle, rows).textContent.trim();
@@ -533,6 +533,24 @@
 		return L.control.layers({}, overlayItems);
 	}
 
+	function generateLegend(legendRows, legendTitle, legendDescription) {
+		var legend = L.control({position: 'bottomright'});
+		legend.onAdd = function() {
+			var div = L.DomUtil.create('div', 'info simpleMapLegend')
+			if (legendTitle) {
+				div.innerHTML += '<h1>' + legendTitle + '</h1>';
+			}
+			if (legendDescription) {
+				div.innerHTML += '<div class="description">' + legendDescription + '</div>';
+			}
+			legendRows.forEach(function(legendRow) {
+				div.innerHTML += '<div class="legendRow">' + legendRow.key + legendRow.value + '</div>';
+			});
+			return div;
+		}
+		return legend;
+	}
+
 	function renderMaps() {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
@@ -548,6 +566,9 @@
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
 			var layers = getLocalSetting('layers');
+			var legendRows = getLocalSetting('legendRows');
+			var legendTitle = getLocalSetting('legendTitle');
+			var legendDescription = getLocalSetting('legendDescription');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
@@ -596,6 +617,11 @@
 			if (Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
+			}
+
+			if (legendRows.length > 0) {
+				var legend = generateLegend(legendRows, legendTitle, legendDescription);
+				legend.addTo(simpleMap)
 			}
 			simpleMap.fitBounds(bounds);
 		})

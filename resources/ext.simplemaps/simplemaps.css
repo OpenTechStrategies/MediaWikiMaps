@@ -23,6 +23,7 @@ div.simpleMap {
 }
 
 .leaflet-touch div.simpleMapLegend {
+	padding: 6px 8px;
 	font: 14px/16px Arial, Helvetica, sans-serif;
 	background: white;
 	background: rgba(255,255,255,.95);
@@ -30,14 +31,24 @@ div.simpleMap {
 	border-radius: 5px;
 	border: 0px;
 }
-
-.leaflet-touch div.simpleMapLegend img {
-	display: inline-block;
+.leaflet-touch div.simpleMapLegend .legendRow {
+	height: 16px;
+	padding: 2px;
+}
+.leaflet-touch div.simpleMapLegend div.imageContainer img {
+	max-width: 16px;
+	max-height: 16px;
+}
+.leaflet-touch div.simpleMapLegend div.imageContainer {
+	float: left;
+	width: 16px;
+	height: 16px;
 	margin-right: 8px;
+	text-align: center;
 }
 .leaflet-touch div.simpleMapLegend i {
-	width: 18px;
-	height: 18px;
 	float: left;
+	width: 16px;
+	height: 16px;
 	margin-right: 8px;
 }
