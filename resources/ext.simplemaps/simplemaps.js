@@ -698,7 +698,9 @@
 				);
 				legend.addTo(simpleMap)
 			}
-			simpleMap.fitBounds(bounds);
+			try {
+				simpleMap.fitBounds(bounds);
+			} catch {}
 		})
 	}
 	var localSettingSets = loadLocalSettingSets();
