@@ -129,6 +129,7 @@
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
 			'layers',
+			'layerControlTitle',
 			'layerControlPosition',
 			'layerControlCollapsed',
 			'legend',
@@ -343,6 +344,7 @@
 		var settings = {
 			icons: {},
 			layers: {},
+			layerControlTitle: '',
 			layerControlPosition: 'topright',
 			layerControlCollapsed: true,
 			features: {},
@@ -358,6 +360,9 @@
 		}
 		if (fieldExists(fieldMap.layers, rows)) {
 			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
+		}
+		if (fieldExists(fieldMap.layerControlTitle, rows)) {
+			settings.layerControlTitle = getSettingFromRows(fieldMap.layerControlTitle, rows).textContent.trim();
 		}
 		if (fieldExists(fieldMap.layerControlPosition, rows)) {
 			settings.layerControlPosition = getSettingFromRows(fieldMap.layerControlPosition, rows).textContent.trim();
@@ -590,6 +595,7 @@
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
 			var layers = getLocalSetting('layers');
+			var layerControlTitle = getLocalSetting('layerControlTitle');
 			var layerControlPosition = getLocalSetting('layerControlPosition');
 			var layerControlCollapsed = getLocalSetting('layerControlCollapsed');
 			var legendRows = getLocalSetting('legendRows');
@@ -651,6 +657,10 @@
 			if (Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
+				if (layerControlTitle) {
+					var controlContainer = layerGroupControl.getContainer();
+					controlContainer.innerHTML = '<h1>' + layerControlTitle + '</h1>' + controlContainer.innerHTML;
+				}
 			}
 
 			if (legendRows.length > 0) {

@@ -34,6 +34,7 @@ Below are the valid setting names:
 
 * `Icons`: an embedded table (see the `Custom Icons` section) which defines custom icons for use by markers in a SimpleMap.
 * `Layers`: an embedded table (see the `Custom Layers` section) which defines custom layers which markers can be assigned to in a SimpleMap.
+* `Layer Control Title`: An optional title to render above the layer controls.
 * `Layer Control Position`: a [Leaflet Control Position](https://leafletjs.com/reference.html#control-position) used to specify where the layer control interface should appear on the map.
 * `Layer Control Collapsed`: a boolean ("true" or "false") which specifies whether the layer control should be expanded or collapsed by default.  Defaults to "true".
 * `Legend`: an embedded table (see the `Legend` section) which defines a legend that can be rendered on a SimpleMap.
