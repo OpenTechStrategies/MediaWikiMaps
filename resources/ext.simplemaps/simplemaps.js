@@ -129,9 +129,12 @@
 		return loadFieldMapFromRows(settingsTable, [
 			'icons',
 			'layers',
+			'layerControlPosition',
+			'layerControlCollapsed',
 			'legend',
 			'legendTitle',
 			'legendDescription',
+			'legendPosition',
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
@@ -340,10 +343,13 @@
 		var settings = {
 			icons: {},
 			layers: {},
+			layerControlPosition: 'topright',
+			layerControlCollapsed: true,
 			features: {},
 			legendRows: [],
 			legendTitle: '',
 			legendDescription: '',
+			legendPosition: 'bottomright',
 			overlayDefault: null,
 			overlayTitle: '',
 		};
@@ -353,6 +359,12 @@
 		if (fieldExists(fieldMap.layers, rows)) {
 			settings.layers = loadLayersFromLayersTable(getFirstChildTable(getSettingFromRows(fieldMap.layers, rows)));
 		}
+		if (fieldExists(fieldMap.layerControlPosition, rows)) {
+			settings.layerControlPosition = getSettingFromRows(fieldMap.layerControlPosition, rows).textContent.trim();
+		}
+		if (fieldExists(fieldMap.layerControlCollapsed, rows)) {
+			settings.layerControlCollapsed = getSettingFromRows(fieldMap.layerControlCollapsed, rows).textContent.trim() === 'true';
+		}
 		if (fieldExists(fieldMap.legend, rows)) {
 			settings.legendRows = loadLegendRowsFromLegendTable(getFirstChildTable(getSettingFromRows(fieldMap.legend, rows)));
 		}
@@ -360,7 +372,10 @@
 			settings.legendTitle = getSettingFromRows(fieldMap.legendTitle, rows).textContent.trim();
 		}
 		if (fieldExists(fieldMap.legendDescription, rows)) {
-			settings.legendDescription = getSettingFromRows(fieldMap.legendDescription, rows).textContent.innerHTML;
+			settings.legendDescription = getSettingFromRows(fieldMap.legendDescription, rows).innerHTML;
+		}
+		if (fieldExists(fieldMap.legendPosition, rows)) {
+			settings.legendPosition = getSettingFromRows(fieldMap.legendPosition, rows).textContent.trim();
 		}
 		if (fieldExists(fieldMap.featureCollectionJson, rows)) {
 			settings.features = loadFeatureCollectionFeaturesFromString(getSettingFromRows(fieldMap.featureCollectionJson, rows).textContent);
@@ -434,7 +449,7 @@
 	}
 
 	function getLocalSetting(setting) {
-		if (localSettings.default && localSettings.default[setting]) {
+		if (localSettings.default && localSettings.default[setting] !== null) {
 			return localSettings.default[setting];
 		}
 		return null;
@@ -527,7 +542,7 @@
 		return layerGroups;
 	}
 
-	function generateLayerGroupControl(layerGroups, layers) {
+	function generateLayerGroupControl(layerGroups, layers, options) {
 		var overlayItems = {};
 		Object.entries(layerGroups).forEach(function([layerId, layerGroup]) {
 			if (layerExists(layerId, layers)) {
@@ -539,20 +554,20 @@
 				overlayItems[layerLabel] = layerGroup;
 			}
 		})
-		return L.control.layers({}, overlayItems);
+		return L.control.layers({}, overlayItems, options);
 	}
 
-	function generateLegend(legendRows, legendTitle, legendDescription) {
-		var legend = L.control({position: 'bottomright'});
+	function generateLegend(rows, title, description, position) {
+		var legend = L.control({ position: position });
 		legend.onAdd = function() {
 			var div = L.DomUtil.create('div', 'info simpleMapLegend')
-			if (legendTitle) {
-				div.innerHTML += '<h1>' + legendTitle + '</h1>';
+			if (title) {
+				div.innerHTML += '<h1>' + title + '</h1>';
 			}
-			if (legendDescription) {
-				div.innerHTML += '<div class="description">' + legendDescription + '</div>';
+			if (description) {
+				div.innerHTML += '<div class="description">' + description + '</div>';
 			}
-			legendRows.forEach(function(legendRow) {
+			rows.forEach(function(legendRow) {
 				div.innerHTML += '<div class="legendRow">' + legendRow.key + legendRow.value + '</div>';
 			});
 			return div;
@@ -575,9 +590,12 @@
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var icons = getLocalSetting('icons');
 			var layers = getLocalSetting('layers');
+			var layerControlPosition = getLocalSetting('layerControlPosition');
+			var layerControlCollapsed = getLocalSetting('layerControlCollapsed');
 			var legendRows = getLocalSetting('legendRows');
 			var legendTitle = getLocalSetting('legendTitle');
 			var legendDescription = getLocalSetting('legendDescription');
+			var legendPosition = getLocalSetting('legendPosition');
 			var features = getLocalSetting('features');
 			var overlayDefault = getLocalSetting('overlayDefault');
 			var overlayTitle = getLocalSetting('overlayTitle');
@@ -622,14 +640,26 @@
 			Object.entries(layerGroups).forEach(function([key, layerGroup]) {
 				simpleMap.addLayer(layerGroup);
 			});
-			var layerGroupControl = generateLayerGroupControl(layerGroups, layers);
+			var layerGroupControl = generateLayerGroupControl(
+				layerGroups,
+				layers,
+				{
+					position: layerControlPosition,
+					collapsed: layerControlCollapsed,
+				},
+			);
 			if (Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
 			}
 
 			if (legendRows.length > 0) {
-				var legend = generateLegend(legendRows, legendTitle, legendDescription);
+				var legend = generateLegend(
+					legendRows,
+					legendTitle,
+					legendDescription,
+					legendPosition,
+				);
 				legend.addTo(simpleMap)
 			}
 			simpleMap.fitBounds(bounds);
