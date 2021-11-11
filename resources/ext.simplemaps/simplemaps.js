@@ -609,8 +609,11 @@
 			}).addTo(simpleMap);
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
-			var settingSetId = 'default';
-			var localSettings = getLocalSettingSet(localSettingSets, settingSetId);
+			var settingsSetName = 'default';
+			if (mapTable.dataset.settings) {
+				settingsSetName = mapTable.dataset.settings;
+			}
+			var localSettings = getLocalSettingSet(localSettingSets, settingsSetName);
 			var icons = getSetting('icons', localSettings);
 			var layers = getSetting('layers', localSettings);
 			var layerControlTitle = getSetting('layerControlTitle', localSettings);
