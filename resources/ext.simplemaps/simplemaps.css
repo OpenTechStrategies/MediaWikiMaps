@@ -35,20 +35,27 @@ div.simpleMap {
 	height: 16px;
 	padding: 2px;
 }
-.leaflet-touch div.simpleMapLegend div.imageContainer img {
+.leaflet-touch div.simpleMapLegend div.imageContainer img,
+.leaflet-touch div.simpleMapControl div.imageContainer img {
 	max-width: 16px;
 	max-height: 16px;
 }
-.leaflet-touch div.simpleMapLegend div.imageContainer {
+.leaflet-touch div.simpleMapLegend div.imageContainer,
+.leaflet-touch div.simpleMapControl div.imageContainer {
 	float: left;
 	width: 16px;
 	height: 16px;
 	margin-right: 8px;
 	text-align: center;
 }
-.leaflet-touch div.simpleMapLegend i {
+.leaflet-touch div.simpleMapLegend i,
+.leaflet-touch div.simpleMapControl i {
 	float: left;
 	width: 16px;
 	height: 16px;
 	margin-right: 8px;
+}
+.leaflet-touch div.simpleMapControl div.imageContainer,
+.leaflet-touch div.simpleMapControl i {
+	margin-right: 0px;
 }

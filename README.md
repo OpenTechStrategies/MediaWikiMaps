@@ -65,6 +65,7 @@ A custom layer table allows a map maker to assign their markers to layer sets wh
 
 * `Id`: The identifier / name which markers can specify in order to be part of this layer.
 * `Label`: An HTML string which is rendered to the end user allowing them to toggle the layer on / off.
+* `Legend Key`: A visual element to be rendered as part of the label.  This can either be a hex code color or an image URL.
 
 #### Legend
 
