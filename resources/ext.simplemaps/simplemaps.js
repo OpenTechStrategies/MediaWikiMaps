@@ -1,7 +1,6 @@
 (function () {
 	var simpleMapIdCounter = 0;
   var simpleMapsConfig = mw.config.get('wgSimpleMaps');
-	var localSettings = {};
 
 	function toCamelCase(whitespacedString) {
 		// Attribution: https://stackoverflow.com/a/50168915/159522
@@ -338,10 +337,8 @@
 		return features;
 	}
 
-	function loadSettingsFromSettingsTable(settingsTable) {
-		var fieldMap = loadSettingsFieldMap(settingsTable);
-		var rows = settingsTable.rows;
-		var settings = {
+	function getDefaultSettings() {
+		return {
 			icons: {},
 			layers: {},
 			layerControlTitle: '',
@@ -355,6 +352,13 @@
 			overlayDefault: null,
 			overlayTitle: '',
 		};
+	}
+
+	function loadSettingsFromSettingsTable(settingsTable) {
+		var fieldMap = loadSettingsFieldMap(settingsTable);
+		var rows = settingsTable.rows;
+		var settings = getDefaultSettings();
+
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
 		}
@@ -420,7 +424,7 @@
 	}
 
 	function hasLayer(marker, layers) {
-		return marker.layer && layerExists(marker.layer, layers);
+		return layers && marker.layer && layerExists(marker.layer, layers);
 	}
 
 	function hasOverlayContent(marker) {
@@ -442,32 +446,42 @@
 		return new L.LatLngBounds(coordinateSets);
 	}
 
-	function loadSettings() {
+	function loadLocalSettingSets() {
 		var settingsTables = getSettingsTables();
+		var localSettingSets = {};
 		settingsTables.forEach(function (settingsTable, i) {
 			var settings = loadSettingsFromSettingsTable(settingsTable);
-			if (!localSettings.default) {
-				localSettings.default = settings;
+			if (settingsTable.id) {
+				localSettingSets[settingsTable.id] = settings;
+			} else if (!localSettingSets.default) {
+				localSettingSets.default = settings;
 			}
-			localSettings[i] = settings;
+			localSettingSets[i] = settings;
 		})
+		if(!localSettingSets.default) {
+			localSettingSets.default = getDefaultSettings();
+		}
+		return localSettingSets;
 	}
 
-	function getLocalSetting(setting) {
-		if (localSettings.default && localSettings.default[setting] !== null) {
-			return localSettings.default[setting];
-		}
-		return null;
-	}
-	function getMapSettings() {
-		if (localSettings.default) {
-			return localSettings.default;
+	function getLocalSettingSet(localSettingSets, key = 'default') {
+		if (localSettingSets[key]) {
+			return localSettingSets[key];
 		}
 		return {};
 	}
+	function getSetting(setting, settings) {
+		if (settings
+			&& settings[setting] !== null
+			&& settings[setting] !== undefined
+		) {
+			return settings[setting];
+		}
+		return null;
+	}
 
 	function attributeExists(attribute, obj) {
-		return attribute in obj;
+		return obj && attribute in obj;
 	}
 
 	function featureExists(featureId, features) {
@@ -541,9 +555,11 @@
 		var layerGroups = {
 			default: L.layerGroup(),
 		};
-		Object.entries(layers).forEach(function([layerId, layer]) {
-			layerGroups[layerId] = L.layerGroup();
-		});
+		if (layers !== null) {
+			Object.entries(layers).forEach(function([layerId, layer]) {
+				layerGroups[layerId] = L.layerGroup();
+			});
+		}
 		return layerGroups;
 	}
 
@@ -580,7 +596,7 @@
 		return legend;
 	}
 
-	function renderMaps() {
+	function renderMaps(localSettingSets) {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
 			var mapDiv = addMapNodeBeforeTable(mapTable);
@@ -593,18 +609,23 @@
 			}).addTo(simpleMap);
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
-			var icons = getLocalSetting('icons');
-			var layers = getLocalSetting('layers');
-			var layerControlTitle = getLocalSetting('layerControlTitle');
-			var layerControlPosition = getLocalSetting('layerControlPosition');
-			var layerControlCollapsed = getLocalSetting('layerControlCollapsed');
-			var legendRows = getLocalSetting('legendRows');
-			var legendTitle = getLocalSetting('legendTitle');
-			var legendDescription = getLocalSetting('legendDescription');
-			var legendPosition = getLocalSetting('legendPosition');
-			var features = getLocalSetting('features');
-			var overlayDefault = getLocalSetting('overlayDefault');
-			var overlayTitle = getLocalSetting('overlayTitle');
+			var settingsSetName = 'default';
+			if (mapTable.dataset.settings) {
+				settingsSetName = mapTable.dataset.settings;
+			}
+			var localSettings = getLocalSettingSet(localSettingSets, settingsSetName);
+			var icons = getSetting('icons', localSettings);
+			var layers = getSetting('layers', localSettings);
+			var layerControlTitle = getSetting('layerControlTitle', localSettings);
+			var layerControlPosition = getSetting('layerControlPosition', localSettings);
+			var layerControlCollapsed = getSetting('layerControlCollapsed', localSettings);
+			var legendRows = getSetting('legendRows', localSettings);
+			var legendTitle = getSetting('legendTitle', localSettings);
+			var legendDescription = getSetting('legendDescription', localSettings);
+			var legendPosition = getSetting('legendPosition', localSettings);
+			var features = getSetting('features', localSettings);
+			var overlayDefault = getSetting('overlayDefault', localSettings);
+			var overlayTitle = getSetting('overlayTitle', localSettings);
 			var markers = getMarkersFromMapTable(mapTable);
 			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
@@ -654,7 +675,7 @@
 					collapsed: layerControlCollapsed,
 				},
 			);
-			if (Object.entries(layers).length > 0) {
+			if (layers && Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
 				if (layerControlTitle) {
@@ -680,6 +701,6 @@
 			simpleMap.fitBounds(bounds);
 		})
 	}
-	loadSettings();
-	renderMaps();
+	var localSettingSets = loadLocalSettingSets();
+	renderMaps(localSettingSets);
 })()
