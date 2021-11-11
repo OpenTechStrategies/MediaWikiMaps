@@ -1,7 +1,6 @@
 (function () {
 	var simpleMapIdCounter = 0;
   var simpleMapsConfig = mw.config.get('wgSimpleMaps');
-	var localSettings = {};
 
 	function toCamelCase(whitespacedString) {
 		// Attribution: https://stackoverflow.com/a/50168915/159522
@@ -442,28 +441,36 @@
 		return new L.LatLngBounds(coordinateSets);
 	}
 
-	function loadSettings() {
+	function loadLocalSettingSets() {
 		var settingsTables = getSettingsTables();
+		var localSettingSets = {};
 		settingsTables.forEach(function (settingsTable, i) {
 			var settings = loadSettingsFromSettingsTable(settingsTable);
-			if (!localSettings.default) {
-				localSettings.default = settings;
+			if (!localSettingSets.default) {
+				localSettingSets.default = settings;
 			}
-			localSettings[i] = settings;
+			if (settingsTable.id) {
+				localSettingSets[settingsTable.id] = settings;
+			}
+			localSettingSets[i] = settings;
 		})
+		return localSettingSets;
 	}
 
-	function getLocalSetting(setting) {
-		if (localSettings.default && localSettings.default[setting] !== null) {
-			return localSettings.default[setting];
-		}
-		return null;
-	}
-	function getMapSettings() {
-		if (localSettings.default) {
-			return localSettings.default;
+	function getLocalSettingSet(localSettingSets, key = 'default') {
+		if (localSettingSets[key]) {
+			return localSettingSets[key];
 		}
 		return {};
+	}
+	function getSetting(setting, settings) {
+		if (settings
+			&& settings[setting] !== null
+			&& settings[setting] !== undefined
+		) {
+			return settings[setting];
+		}
+		return null;
 	}
 
 	function attributeExists(attribute, obj) {
@@ -580,7 +587,7 @@
 		return legend;
 	}
 
-	function renderMaps() {
+	function renderMaps(localSettingSets) {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
 			var mapDiv = addMapNodeBeforeTable(mapTable);
@@ -593,18 +600,20 @@
 			}).addTo(simpleMap);
 
 			L.Icon.Default.imagePath = getLeafletIconImagePath()
-			var icons = getLocalSetting('icons');
-			var layers = getLocalSetting('layers');
-			var layerControlTitle = getLocalSetting('layerControlTitle');
-			var layerControlPosition = getLocalSetting('layerControlPosition');
-			var layerControlCollapsed = getLocalSetting('layerControlCollapsed');
-			var legendRows = getLocalSetting('legendRows');
-			var legendTitle = getLocalSetting('legendTitle');
-			var legendDescription = getLocalSetting('legendDescription');
-			var legendPosition = getLocalSetting('legendPosition');
-			var features = getLocalSetting('features');
-			var overlayDefault = getLocalSetting('overlayDefault');
-			var overlayTitle = getLocalSetting('overlayTitle');
+			var settingSetId = 'default';
+			var localSettings = getLocalSettingSet(localSettingSets, settingSetId);
+			var icons = getSetting('icons', localSettings);
+			var layers = getSetting('layers', localSettings);
+			var layerControlTitle = getSetting('layerControlTitle', localSettings);
+			var layerControlPosition = getSetting('layerControlPosition', localSettings);
+			var layerControlCollapsed = getSetting('layerControlCollapsed', localSettings);
+			var legendRows = getSetting('legendRows', localSettings);
+			var legendTitle = getSetting('legendTitle', localSettings);
+			var legendDescription = getSetting('legendDescription', localSettings);
+			var legendPosition = getSetting('legendPosition', localSettings);
+			var features = getSetting('features', localSettings);
+			var overlayDefault = getSetting('overlayDefault', localSettings);
+			var overlayTitle = getSetting('overlayTitle', localSettings);
 			var markers = getMarkersFromMapTable(mapTable);
 			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
@@ -680,6 +689,6 @@
 			simpleMap.fitBounds(bounds);
 		})
 	}
-	loadSettings();
-	renderMaps();
+	var localSettingSets = loadLocalSettingSets();
+	renderMaps(localSettingSets);
 })()
