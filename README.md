@@ -34,9 +34,12 @@ Below are the valid setting names:
 
 * `Icons`: an embedded table (see the `Custom Icons` section) which defines custom icons for use by markers in a SimpleMap.
 * `Layers`: an embedded table (see the `Custom Layers` section) which defines custom layers which markers can be assigned to in a SimpleMap.
+* `Layer Control Position`: a [Leaflet Control Position](https://leafletjs.com/reference.html#control-position) used to specify where the layer control interface should appear on the map.
+* `Layer Control Collapsed`: a boolean ("true" or "false") which specifies whether the layer control should be expanded or collapsed by default.  Defaults to "true".
 * `Legend`: an embedded table (see the `Legend` section) which defines a legend that can be rendered on a SimpleMap.
 * `Legend Title`: An optional title to render above the legend.
 * `Legend Description`: An optional description (HTML string) for the legend.
+* `Legend Position`: a [Leaflet Control Position](https://leafletjs.com/reference.html#control-position) used to specify where the legend should appear on the map.
 * `Feature Collection JSON`: A JSON string which contains a [GeoJSON Feature Collection](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3).  Feature IDs can be referenced by map data.
 * `Overlay Title`: An optional string which, if set, will render before any content on the overlay pane as a title.
 * `Overlay Default`: An HTML block that is rendered in the overlay pane when no element has been selected. This must be present in order to render an overlay pane.
