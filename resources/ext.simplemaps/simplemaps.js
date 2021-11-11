@@ -659,7 +659,12 @@
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
 				if (layerControlTitle) {
 					var controlContainer = layerGroupControl.getContainer();
-					controlContainer.innerHTML = '<h1>' + layerControlTitle + '</h1>' + controlContainer.innerHTML;
+					var controlTitle = document.createElement('h1');
+					controlTitle.innerHTML = layerControlTitle;
+					controlContainer.insertBefore(
+						controlTitle,
+						controlContainer.firstChild,
+					);
 				}
 			}
 
