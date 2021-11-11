@@ -337,10 +337,8 @@
 		return features;
 	}
 
-	function loadSettingsFromSettingsTable(settingsTable) {
-		var fieldMap = loadSettingsFieldMap(settingsTable);
-		var rows = settingsTable.rows;
-		var settings = {
+	function getDefaultSettings() {
+		return {
 			icons: {},
 			layers: {},
 			layerControlTitle: '',
@@ -354,6 +352,13 @@
 			overlayDefault: null,
 			overlayTitle: '',
 		};
+	}
+
+	function loadSettingsFromSettingsTable(settingsTable) {
+		var fieldMap = loadSettingsFieldMap(settingsTable);
+		var rows = settingsTable.rows;
+		var settings = getDefaultSettings();
+
 		if (fieldExists(fieldMap.icons, rows)) {
 			settings.icons = loadIconsFromIconsTable(getFirstChildTable(getSettingFromRows(fieldMap.icons, rows)));
 		}
@@ -419,7 +424,7 @@
 	}
 
 	function hasLayer(marker, layers) {
-		return marker.layer && layerExists(marker.layer, layers);
+		return layers && marker.layer && layerExists(marker.layer, layers);
 	}
 
 	function hasOverlayContent(marker) {
@@ -446,14 +451,16 @@
 		var localSettingSets = {};
 		settingsTables.forEach(function (settingsTable, i) {
 			var settings = loadSettingsFromSettingsTable(settingsTable);
-			if (!localSettingSets.default) {
-				localSettingSets.default = settings;
-			}
 			if (settingsTable.id) {
 				localSettingSets[settingsTable.id] = settings;
+			} else if (!localSettingSets.default) {
+				localSettingSets.default = settings;
 			}
 			localSettingSets[i] = settings;
 		})
+		if(!localSettingSets.default) {
+			localSettingSets.default = getDefaultSettings();
+		}
 		return localSettingSets;
 	}
 
@@ -474,7 +481,7 @@
 	}
 
 	function attributeExists(attribute, obj) {
-		return attribute in obj;
+		return obj && attribute in obj;
 	}
 
 	function featureExists(featureId, features) {
@@ -548,9 +555,11 @@
 		var layerGroups = {
 			default: L.layerGroup(),
 		};
-		Object.entries(layers).forEach(function([layerId, layer]) {
-			layerGroups[layerId] = L.layerGroup();
-		});
+		if (layers !== null) {
+			Object.entries(layers).forEach(function([layerId, layer]) {
+				layerGroups[layerId] = L.layerGroup();
+			});
+		}
 		return layerGroups;
 	}
 
@@ -663,7 +672,7 @@
 					collapsed: layerControlCollapsed,
 				},
 			);
-			if (Object.entries(layers).length > 0) {
+			if (layers && Object.entries(layers).length > 0) {
 				layerGroupControl.addTo(simpleMap);
 				layerGroupControl.getContainer().classList.add('simpleMapControl');
 				if (layerControlTitle) {
