@@ -114,6 +114,7 @@
 		return loadFieldMapFromColumns(layersTable, [
 			'id',
 			'label',
+			'legendKey',
 		]);
 	}
 
@@ -209,27 +210,6 @@
 		return markers;
 	}
 
-	function loadLayersFromLayersTable(layersTable) {
-		var layers = {};
-		if (isTable(layersTable)) {
-			var fieldMap = loadLayerFieldMap(layersTable);
-			for (var i = 1; i < layersTable.rows.length; i++) {
-				var row = layersTable.rows[i]
-				if(fieldExists(fieldMap.id, row.cells)) {
-					var layerId = row.cells[fieldMap.id].textContent.trim();
-					var layerSettings = {
-						label: '',
-					};
-					if (fieldExists(fieldMap.label, row.cells)) {
-						layerSettings.label = row.cells[fieldMap.label].innerHTML;
-					}
-					layers[layerId] = layerSettings;
-				}
-			}
-		}
-		return layers;
-	}
-
 	function generateLegendColorKey(color) {
 		return '<i style="background: ' + color + '"></i>';
 	}
@@ -244,6 +224,31 @@
 		} else {
 			return generateLegendImageKey(keyString);
 		}
+	}
+
+	function loadLayersFromLayersTable(layersTable) {
+		var layers = {};
+		if (isTable(layersTable)) {
+			var fieldMap = loadLayerFieldMap(layersTable);
+			for (var i = 1; i < layersTable.rows.length; i++) {
+				var row = layersTable.rows[i]
+				if(fieldExists(fieldMap.id, row.cells)) {
+					var layerId = row.cells[fieldMap.id].textContent.trim();
+					var layerSettings = {
+						label: '',
+						legendKey: '',
+					};
+					if (fieldExists(fieldMap.label, row.cells)) {
+						layerSettings.label = row.cells[fieldMap.label].innerHTML;
+					}
+					if (fieldExists(fieldMap.legendKey, row.cells)) {
+						layerSettings.legendKey = generateLegendKey(row.cells[fieldMap.legendKey].textContent.trim());
+					}
+					layers[layerId] = layerSettings;
+				}
+			}
+		}
+		return layers;
 	}
 
 	function loadLegendRowsFromLegendTable(legendTable) {
@@ -526,7 +531,11 @@
 		var overlayItems = {};
 		Object.entries(layerGroups).forEach(function([layerId, layerGroup]) {
 			if (layerExists(layerId, layers)) {
+				var legendKey = layers[layerId].legendKey
 				var layerLabel = layers[layerId].label;
+				if (legendKey) {
+					layerLabel = "<div style='display:inline-block'>" + layers[layerId].legendKey + "&nbsp;-&nbsp;</div>" + layerLabel;
+				}
 				overlayItems[layerLabel] = layerGroup;
 			}
 		})
