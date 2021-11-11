@@ -12,6 +12,9 @@ div.simpleMap {
 	border-radius: 5px;
 	border: 0px;
 }
+.leaflet-touch h1 {
+	margin-top: 0px;
+}
 
 .leaflet-touch div.simpleMapControl {
 	font: 14px/16px Arial, Helvetica, sans-serif;
