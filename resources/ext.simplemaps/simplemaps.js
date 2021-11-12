@@ -671,6 +671,9 @@
 					decoratedFeature.properties.simpleMapOverlayPane = overlay;
 					var featureGeoJson = generateGeoJsonFeature(decoratedFeature);
 					featureGeoJson.addTo(layerGroups[layerGroup]);
+					if (marker.popupContent) {
+						featureGeoJson.bindPopup(marker.popupContent);
+					}
 				}
 			});
 
