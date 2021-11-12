@@ -138,6 +138,7 @@
 			'featureCollectionJson',
 			'overlayDefault',
 			'overlayTitle',
+			'scrollWheelZoom',
 		]);
 	}
 
@@ -351,6 +352,7 @@
 			legendPosition: 'bottomright',
 			overlayDefault: null,
 			overlayTitle: '',
+			scrollWheelZoom: true,
 		};
 	}
 
@@ -394,6 +396,9 @@
 		}
 		if (fieldExists(fieldMap.overlayTitle, rows)) {
 			settings.overlayTitle = getSettingFromRows(fieldMap.overlayTitle, rows).textContent.trim();
+		}
+		if (fieldExists(fieldMap.scrollWheelZoom, rows)) {
+			settings.scrollWheelZoom = getSettingFromRows(fieldMap.scrollWheelZoom, rows).textContent.trim() === 'true';
 		}
 		return settings;
 	}
@@ -468,7 +473,7 @@
 		if (localSettingSets[key]) {
 			return localSettingSets[key];
 		}
-		return {};
+		return getDefaultSettings();
 	}
 	function getSetting(setting, settings) {
 		if (settings
@@ -599,16 +604,6 @@
 	function renderMaps(localSettingSets) {
 		var mapTables = getMapTables();
 		mapTables.forEach(function (mapTable) {
-			var mapDiv = addMapNodeBeforeTable(mapTable);
-			var simpleMap = L.map(
-				mapDiv.id,
-				{ 'tap': false } // See https://github.com/Leaflet/Leaflet/issues/7255#issuecomment-849638476
-			).setView([0,0], 0);
-			L.tileLayer(simpleMapsConfig.tileLayerUrl, {
-				attribution: simpleMapsConfig.tileLayerAttribution,
-			}).addTo(simpleMap);
-
-			L.Icon.Default.imagePath = getLeafletIconImagePath()
 			var settingsSetName = 'default';
 			if (mapTable.dataset.settings) {
 				settingsSetName = mapTable.dataset.settings;
@@ -626,10 +621,25 @@
 			var features = getSetting('features', localSettings);
 			var overlayDefault = getSetting('overlayDefault', localSettings);
 			var overlayTitle = getSetting('overlayTitle', localSettings);
+			var scrollWheelZoom = getSetting('scrollWheelZoom', localSettings);
 			var markers = getMarkersFromMapTable(mapTable);
 			var bounds = getBoundsFromMarkers(markers, features);
 			var overlay = generateOverlayControl(overlayDefault, overlayTitle)
 			var layerGroups = generateLayerGroups(layers);
+
+			var mapDiv = addMapNodeBeforeTable(mapTable);
+			var simpleMap = L.map(
+				mapDiv.id,
+				{
+					'tap': false, // See https://github.com/Leaflet/Leaflet/issues/7255#issuecomment-849638476
+					'scrollWheelZoom': scrollWheelZoom,
+				}
+			).setView([0,0], 0);
+			L.tileLayer(simpleMapsConfig.tileLayerUrl, {
+				attribution: simpleMapsConfig.tileLayerAttribution,
+			}).addTo(simpleMap);
+
+			L.Icon.Default.imagePath = getLeafletIconImagePath()
 
 			if (overlayDefault) {
 				overlay.addTo(simpleMap);
