@@ -468,7 +468,7 @@
 		if (localSettingSets[key]) {
 			return localSettingSets[key];
 		}
-		return {};
+		return getDefaultSettings();
 	}
 	function getSetting(setting, settings) {
 		if (settings
