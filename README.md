@@ -44,6 +44,7 @@ Below are the valid setting names:
 * `Feature Collection JSON`: A JSON string which contains a [GeoJSON Feature Collection](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3).  Feature IDs can be referenced by map data.
 * `Overlay Title`: An optional string which, if set, will render before any content on the overlay pane as a title.
 * `Overlay Default`: An HTML block that is rendered in the overlay pane when no element has been selected. This must be present in order to render an overlay pane.
+* `Scroll Wheel Zoom`: a boolean which determines whether the scroll wheel will zoom in and out of the map.
 
 #### Custom Icons
 
